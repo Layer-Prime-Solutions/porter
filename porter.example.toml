@@ -1,0 +1,107 @@
+# Porter — Example Configuration
+#
+# Copy this file to porter.toml and customize for your setup:
+#   cp porter.example.toml porter.toml
+#
+# Start Porter:
+#   porter serve                       # HTTP server on localhost:3000
+#   porter stdio                       # STDIO bridge for Claude Desktop
+#
+# Porter watches porter.toml for changes and hot-reloads automatically.
+
+
+# ─── MCP Servers ─────────────────────────────────────────────────────────────
+#
+# Wrap external MCP servers (STDIO or HTTP transport) behind Porter's
+# unified endpoint. Each server's tools are namespaced by slug to
+# prevent name collisions.
+
+[servers.filesystem]
+slug = "fs"
+transport = "stdio"
+command = "mcp-server-filesystem"
+args = ["/home/user/projects"]
+
+# [servers.github-mcp]
+# slug = "gh-mcp"
+# transport = "stdio"
+# command = "gh-mcp"
+# env.GITHUB_TOKEN = "$GITHUB_TOKEN"
+# handshake_timeout_secs = 60
+
+# [servers.context7]
+# slug = "c7"
+# transport = "http"
+# url = "https://mcp.context7.com/mcp"
+
+
+# ─── CLI Tools ───────────────────────────────────────────────────────────────
+#
+# Wrap CLI programs as MCP tools. Porter discovers subcommands via --help,
+# enforces read-only access by default, and injects structured-output flags.
+#
+# Built-in profiles: aws, gcloud, kubectl, gh, az, ansible, gitlab,
+#                    doggo, rg, tldr, whois
+
+[cli.aws]
+slug = "aws"
+transport = "cli"
+command = "aws"
+profile = "aws"                        # Injects --output json, enforces read-only
+env.AWS_PROFILE = "$AWS_PROFILE"
+env.AWS_REGION = "$AWS_REGION"
+timeout_secs = 60
+allow = ["s3", "ec2", "iam", "sts"]   # Only expose these services
+deny = ["s3 rm", "ec2 terminate-instances"]
+
+# Opt-in to specific write operations
+[cli.aws.write_access]
+"s3 cp" = true
+"s3 sync" = true
+
+[cli.kubectl]
+slug = "k8s"
+transport = "cli"
+command = "kubectl"
+profile = "kubectl"                    # Injects -o json, enforces read-only
+env.KUBECONFIG = "$KUBECONFIG"
+deny = ["delete", "drain", "cordon"]
+
+[cli.gh]
+slug = "gh"
+transport = "cli"
+command = "gh"
+profile = "gh"                         # Injects --json
+env.GH_TOKEN = "$GH_TOKEN"
+
+# [cli.gcloud]
+# slug = "gcloud"
+# transport = "cli"
+# command = "gcloud"
+# profile = "gcloud"                   # Injects --format json
+# timeout_secs = 45
+
+# [cli.az]
+# slug = "az"
+# transport = "cli"
+# command = "az"
+# profile = "az"                       # Injects --output json
+
+# ─── Custom CLI tools (no profile) ──────────────────────────────────────────
+#
+# Any CLI tool works — just set command and optional flags.
+
+# [cli.ripgrep]
+# slug = "rg"
+# transport = "cli"
+# command = "rg"
+# profile = "rg"
+# timeout_secs = 10
+
+# [cli.my-internal-tool]
+# slug = "mytool"
+# transport = "cli"
+# command = "my-internal-tool"
+# inject_flags = ["--format", "json"]
+# timeout_secs = 10
+# expand_subcommands = true
