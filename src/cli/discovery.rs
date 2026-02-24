@@ -99,7 +99,7 @@ pub async fn discover_subcommands(config: DiscoveryConfig) -> DiscoveryResult {
         }
 
         // Process current tier concurrently
-        let current_tier: Vec<(Vec<String>, u8)> = queue.drain(..).collect();
+        let current_tier: Vec<(Vec<String>, u8)> = std::mem::take(&mut queue);
         let mut handles = Vec::with_capacity(current_tier.len());
 
         for (prefix, depth) in current_tier {

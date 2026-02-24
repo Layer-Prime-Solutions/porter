@@ -301,17 +301,18 @@ fn determine_expansion_mode(
     }
 
     // 3. help_depth = Some(n) where n > 0 → discovery mode
-    if let Some(depth) = config.help_depth {
-        if depth > 0 {
-            return Ok(ExpansionMode::Discovery { depth });
-        }
+    if let Some(depth) = config.help_depth
+        && depth > 0
+    {
+        return Ok(ExpansionMode::Discovery { depth });
     }
 
     // 4. help_depth = None + profile → discovery mode with depth 3
-    if config.help_depth.is_none() && profile.is_some() {
-        if profile.as_ref().map(|p| p.expand_by_default()).unwrap_or(false) {
-            return Ok(ExpansionMode::Discovery { depth: 3 });
-        }
+    if config.help_depth.is_none()
+        && profile.is_some()
+        && profile.as_ref().map(|p| p.expand_by_default()).unwrap_or(false)
+    {
+        return Ok(ExpansionMode::Discovery { depth: 3 });
     }
 
     // 5. expand_subcommands = Some(true) → static profile expansion

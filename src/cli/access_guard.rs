@@ -107,23 +107,23 @@ impl AccessGuard {
         }
 
         // Step 2: Write-only check (from profile read-only checker)
-        if let Some(is_read_only) = &self.is_read_only_fn {
-            if !is_read_only(args) {
-                // Operation is a write — check for explicit opt-in
-                let allowed_write = self.write_access.iter().any(|(prefix, &allowed)| {
-                    allowed && subcommand_path.starts_with(prefix.as_str())
+        if let Some(is_read_only) = &self.is_read_only_fn
+            && !is_read_only(args)
+        {
+            // Operation is a write — check for explicit opt-in
+            let allowed_write = self.write_access.iter().any(|(prefix, &allowed)| {
+                allowed && subcommand_path.starts_with(prefix.as_str())
+            });
+            if !allowed_write {
+                let hint = format!(
+                    "Command blocked: {} {} is a write operation. Enable write_access in config to allow.",
+                    command,
+                    subcommand_path
+                );
+                return Err(AccessDenied::WriteBlocked {
+                    subcommand: subcommand_path.clone(),
+                    hint,
                 });
-                if !allowed_write {
-                    let hint = format!(
-                        "Command blocked: {} {} is a write operation. Enable write_access in config to allow.",
-                        command,
-                        subcommand_path
-                    );
-                    return Err(AccessDenied::WriteBlocked {
-                        subcommand: subcommand_path.clone(),
-                        hint,
-                    });
-                }
             }
         }
 
